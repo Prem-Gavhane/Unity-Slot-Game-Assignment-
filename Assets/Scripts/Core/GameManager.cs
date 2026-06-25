@@ -1,6 +1,7 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using DG.Tweening;
 
 public class GameManager : MonoBehaviour
 {
@@ -11,7 +12,9 @@ public class GameManager : MonoBehaviour
 
     public HandleController handleController;
 
-    [Header("UI")]
+[Header("Victory Animation")]
+public RectTransform victoryLogo;
+    
     [Header("UI")]
     public TMP_Text resultText;
     public TMP_Text rewardText;
@@ -29,6 +32,9 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         UpdateUI();
+
+          victoryLogo.localScale = Vector3.zero;
+    victoryLogo.gameObject.SetActive(false);
     }
     public void Spin()
     {
@@ -133,6 +139,8 @@ public class GameManager : MonoBehaviour
             resultText.text = "JACKPOT!";
             rewardText.text = "Rs:" + reward;
 
+             PlayVictoryAnimation();
+
             UpdateUI();
         }
         else
@@ -141,6 +149,36 @@ public class GameManager : MonoBehaviour
             rewardText.text = "Rs:0";
         }
     }
+
+    private void PlayVictoryAnimation()
+{
+    victoryLogo.gameObject.SetActive(true);
+
+    victoryLogo.localScale = Vector3.zero;
+
+    Sequence seq = DOTween.Sequence();
+
+    seq.Append(
+        victoryLogo.DOScale(1.8f, 0.4f)
+        .SetEase(Ease.OutBack)
+    );
+
+    seq.Append(
+        victoryLogo.DOScale(1.5f, 0.2f)
+    );
+
+    seq.AppendInterval(2f);
+
+    seq.Append(
+        victoryLogo.DOScale(0f, 0.3f)
+        .SetEase(Ease.InBack)
+    );
+
+    seq.OnComplete(() =>
+    {
+        victoryLogo.gameObject.SetActive(false);
+    });
+}
 
     private void UpdateUI()
     {
