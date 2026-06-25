@@ -1,125 +1,98 @@
+using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
-using DG.Tweening;
 
 public class ReelController : MonoBehaviour
 {
-    public enum ReelState
-    {
-        Idle,
-        Spinning,
-        Stopping
-    }
-
     [Header("References")]
-    [SerializeField] private RectTransform content;
+    public RectTransform content;
 
     [Header("Settings")]
-    [SerializeField] private float spinSpeed = 1200f;
-    [SerializeField] private float symbolHeight = 44.01f;
+    public float spinSpeed = 1200f;
+    public float symbolHeight = 85f;
 
-    private ReelState currentState = ReelState.Idle;
-
-    private float accumulatedMove;
-
-    private SymbolType targetResult;
+    private bool isSpinning;
 
     private void Update()
     {
-        if (currentState != ReelState.Spinning)
+        if (!isSpinning)
             return;
 
-        float move = spinSpeed * Time.deltaTime;
+        content.anchoredPosition += Vector2.down * spinSpeed * Time.deltaTime;
 
-        content.anchoredPosition -= new Vector2(0, move);
+        RecycleSymbols();
+    }
 
-        accumulatedMove += move;
+    private void RecycleSymbols()
+    {
+        if (content.childCount == 0)
+            return;
 
-        if (accumulatedMove >= symbolHeight)
+        RectTransform firstSymbol =
+            content.GetChild(0).GetComponent<RectTransform>();
+
+        float worldY =
+            firstSymbol.anchoredPosition.y +
+            content.anchoredPosition.y;
+
+        if (worldY < -symbolHeight)
         {
-            accumulatedMove -= symbolHeight;
+            firstSymbol.SetAsLastSibling();
 
-            RecycleSymbol();
+            content.anchoredPosition +=
+                new Vector2(0, symbolHeight);
         }
     }
 
     public void StartSpin()
     {
-        accumulatedMove = 0;
-        currentState = ReelState.Spinning;
+        isSpinning = true;
     }
 
-    public void StopSpin(SymbolType result)
+    public void StopAtSymbol(SymbolType targetSymbol)
     {
-        targetResult = result;
-
-        currentState = ReelState.Stopping;
-
-        AlignToResult();
+        StartCoroutine(StopRoutine(targetSymbol));
     }
 
-    private void RecycleSymbol()
+    private IEnumerator StopRoutine(SymbolType targetSymbol)
     {
-        Transform first = content.GetChild(0);
+        isSpinning = false;
 
-        first.SetAsLastSibling();
+        yield return new WaitForSeconds(0.05f);
 
-        LayoutRebuilder.ForceRebuildLayoutImmediate(content);
-    }
+        int targetIndex = -1;
 
-    private void AlignToResult()
-    {
-        ReelSymbol targetSymbol = null;
-
-        float closestDistance = float.MaxValue;
-
-        foreach (Transform child in content)
+        for (int i = 1; i < content.childCount - 1; i++)
         {
-            ReelSymbol reelSymbol =
-                child.GetComponent<ReelSymbol>();
+            ReelSymbol symbol =
+                content.GetChild(i).GetComponent<ReelSymbol>();
 
-            if (reelSymbol == null)
-                continue;
-
-            if (reelSymbol.symbolType != targetResult)
-                continue;
-
-            RectTransform rect =
-                child.GetComponent<RectTransform>();
-
-            float distance =
-                Mathf.Abs(rect.anchoredPosition.y);
-
-            if (distance < closestDistance)
+            if (symbol.symbolType == targetSymbol)
             {
-                closestDistance = distance;
-                targetSymbol = reelSymbol;
+                targetIndex = i;
+                break;
             }
         }
 
-        if (targetSymbol == null)
-        {
-            currentState = ReelState.Idle;
-            return;
-        }
+        if (targetIndex == -1)
+            yield break;
 
-        RectTransform targetRect =
-            targetSymbol.GetComponent<RectTransform>();
+        float targetY = targetIndex * symbolHeight;
 
-        float finalY =
-            content.anchoredPosition.y
-            - targetRect.anchoredPosition.y;
-
-        content.DOAnchorPosY(finalY, 0.5f)
-            .SetEase(Ease.OutExpo)
-            .OnComplete(() =>
-            {
-                currentState = ReelState.Idle;
-            });
+        content.anchoredPosition =
+            new Vector2(
+                content.anchoredPosition.x,
+                targetY
+            );
     }
 
-    public ReelState GetState()
+    public SymbolType GetMiddleSymbol()
     {
-        return currentState;
+        int middleIndex = 1;
+
+        ReelSymbol symbol =
+            content.GetChild(middleIndex)
+            .GetComponent<ReelSymbol>();
+
+        return symbol.symbolType;
     }
 }
