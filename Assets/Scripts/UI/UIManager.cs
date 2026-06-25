@@ -2,15 +2,25 @@ using UnityEngine;
 
 public class UIManager : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    
+    public GameObject Handel_Up;
+public GameObject Handel_Down;
+
+
+    void Awake()
     {
-        
+         Handel_Up.gameObject.SetActive(true);
+        Handel_Down.gameObject.SetActive(false);
+    }
+    public void PlayHandle()
+    {
+        Handel_Up.gameObject.SetActive(true);
+        Handel_Down.gameObject.SetActive(false);
     }
 
-    // Update is called once per frame
-    void Update()
+ public void StopHandle()
     {
-        
+         Handel_Up.gameObject.SetActive(false);
+        Handel_Down.gameObject.SetActive(true);
     }
 }

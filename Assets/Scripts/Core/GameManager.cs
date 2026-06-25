@@ -9,15 +9,41 @@ public class GameManager : MonoBehaviour
     public ReelController reel2;
     public ReelController reel3;
 
+    public HandleController handleController;
+
+    [Header("UI")]
     [Header("UI")]
     public TMP_Text resultText;
+    public TMP_Text rewardText;
+
+    [Header("Balance System")]
+    public TMP_Text balanceText;
+
+    public int balance = 0;
+    public int spinCost = 50;
+
 
     private bool isSpinning;
 
+
+    void Start()
+    {
+        UpdateUI();
+    }
     public void Spin()
     {
         if (isSpinning)
             return;
+
+        if (balance < spinCost)
+        {
+            resultText.text = "NOT ENOUGH COINS!";
+            return;
+        }
+
+        balance -= spinCost;
+
+        UpdateUI();
 
         StartCoroutine(SpinRoutine());
     }
@@ -25,6 +51,8 @@ public class GameManager : MonoBehaviour
     private IEnumerator SpinRoutine()
     {
         isSpinning = true;
+
+        handleController.PlayHandle();
 
         resultText.text = "";
 
@@ -57,21 +85,57 @@ public class GameManager : MonoBehaviour
 
         CheckWin(result1, result2, result3);
 
+        handleController.StopHandle();
+
         isSpinning = false;
     }
 
+    private int GetSymbolValue(SymbolType symbol)
+    {
+        switch (symbol)
+        {
+            case SymbolType.Seven:
+                return 1000;
+
+            case SymbolType.Bar:
+                return 500;
+
+            case SymbolType.Bell:
+                return 250;
+
+            case SymbolType.Cherry:
+                return 100;
+
+            default:
+                return 0;
+        }
+    }
+
     private void CheckWin(
-        SymbolType r1,
-        SymbolType r2,
-        SymbolType r3)
+       SymbolType r1,
+       SymbolType r2,
+       SymbolType r3)
     {
         if (r1 == r2 && r2 == r3)
         {
+            int reward = GetSymbolValue(r1);
+
+            balance += reward;
+
             resultText.text = "JACKPOT!";
+            rewardText.text = "Rs:" + reward;
+
+            UpdateUI();
         }
         else
         {
             resultText.text = "TRY AGAIN";
+            rewardText.text = "Rs:0";
         }
+    }
+
+    private void UpdateUI()
+    {
+        balanceText.text = balance.ToString();
     }
 }
