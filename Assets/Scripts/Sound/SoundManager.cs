@@ -48,4 +48,9 @@ public class SoundManager : MonoBehaviour
             Debug.LogWarning("Sound not found: " + soundName);
         }
     }
+
+    public void StopAll()
+    {
+        audioSource.Stop();
+    }
 }

@@ -32,6 +32,8 @@ public class GameManager : MonoBehaviour
     }
     public void Spin()
     {
+                SoundManager.Instance.Play("Click");
+
         if (isSpinning)
             return;
 
@@ -50,6 +52,10 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator SpinRoutine()
     {
+        
+        SoundManager.Instance.StopAll();
+        
+        SoundManager.Instance.Play("Spin");
         isSpinning = true;
 
         handleController.PlayHandle();
@@ -118,6 +124,8 @@ public class GameManager : MonoBehaviour
     {
         if (r1 == r2 && r2 == r3)
         {
+        SoundManager.Instance.Play("Win");
+
             int reward = GetSymbolValue(r1);
 
             balance += reward;
